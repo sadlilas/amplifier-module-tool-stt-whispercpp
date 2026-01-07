@@ -7,6 +7,7 @@ Models are downloaded from Hugging Face on first use.
 
 import logging
 import os
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -223,9 +224,19 @@ async def download_model(
                         if progress_callback:
                             progress_callback(downloaded, total)
 
-        # Move temp file to final location
-        temp_path.rename(model_path)
-        logger.info(f"Model {model_id} downloaded to {model_path}")
+        # Verify temp file was written
+        if not temp_path.exists():
+            raise RuntimeError(f"Download failed: temp file not created at {temp_path}")
+
+        # Use shutil.move() for cross-platform reliability.
+        # Path.rename() can silently fail on Windows, especially in PyInstaller bundles on ARM.
+        shutil.move(str(temp_path), str(model_path))
+
+        # Verify the final file exists after move
+        if not model_path.exists():
+            raise RuntimeError(f"Download failed: file not present at {model_path} after move")
+
+        logger.info(f"Model {model_id} downloaded successfully to {model_path}")
         return model_path
 
     except Exception as e:
