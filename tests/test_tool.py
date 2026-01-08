@@ -37,9 +37,9 @@ def test_tool_creation():
     assert tool.description is not None
 
 
-def test_tool_input_schema():
+def test_tool_get_schema():
     """Test the tool has proper input schema."""
     tool = TranscribeTool(config={"model": "small"})
-    schema = tool.input_schema
+    schema = tool.get_schema()
     assert "audio_data" in schema["properties"]
     assert "audio_format" in schema["properties"]
